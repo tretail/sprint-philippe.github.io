@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prototype Application Mobile - Dandi le Ranger</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .button {
+            background-color: #ff6f61;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+            margin: 20px 0;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1em;
+            border-radius: 10px;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover {
+            background-color: #ff3b2f;
+        }
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background-color: #f0f0f0;
+            margin: 15px 0;
+            border-radius: 10px;
+            transition: transform 0.2s ease;
+        }
+        .option:hover {
+            transform: scale(1.02);
+        }
+        .option img {
+            width: 50px;
+            height: 50px;
+            margin-right: 20px;
+        }
+        .product {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background-color: #f0f0f0;
+            margin: 15px 0;
+            border-radius: 10px;
+            transition: transform 0.2s ease;
+        }
+        .product:hover {
+            transform: scale(1.02);
+        }
+        .product img {
+            width: 80px;
+            height: 80px;
+            margin-right: 20px;
+            border-radius: 10px;
+        }
+        h2 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            color: #ff6f61;
+        }
+        h3 {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 25px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            width: 50%;
+            height: 20px;
+            background-color: #4CAF50;
+            border-radius: 25px;
+        }
+        #map {
+            width: 100%;
+            height: 300px;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Step 1: Product Selection -->
+        <h2>1. Choisissez votre produit</h2>
+        <div class="product">
+            <img src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?q=80&w=3558&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Lunettes de soleil">
+            <div>
+                <p><strong>Lunettes de soleil robustes pour les rangers</strong></p>
+                <p>Protection UV, verres anti-rayures, idéales pour l'extérieur.</p>
+            </div>
+        </div>
+        <button class="button" onclick="showStep(2)" id="commanderButton">Commander</button>
+
+        <!-- Step 2: Delivery Location and Speed -->
+        <div id="step2" style="display: none;">
+            <h2>2. Choisissez votre lieu de réception et la vitesse de livraison</h2>
+            <h3>Lieu de réception :</h3>
+            <div class="option">
+                <img src="https://www.colony-perroquet.fr/wp/wp-content/uploads/2016/05/4-1.webp" alt="volière">
+                <span>Volière à proximité</span>
+            </div>
+            <div class="option">
+                <img src="https://dynamic-media-cdn.tripadvisor.com/media/photo-o/09/de/ce/01/rangerwood-machan-jungle.jpg?w=1400&h=-1&s=1" alt="station">
+                <span>Station Ranger du Parc</span>
+            </div>
+            <h3>Vitesse de livraison :</h3>
+            <div class="option">
+                <img src="https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQFLyrpyu6BytcwzJauh2mWNzBvqZkhsM3cg38FtYyS_3930wCq" alt="pigeon">
+                <span>Pigeon - Livraison lente</span>
+            </div>
+            <div class="option">
+                <img src="https://www.autourdupotager.com/wp-content/uploads/2023/11/faucon-sauvage.jpg.webp" alt="rapace">
+                <span>Rapace - Livraison rapide</span>
+            </div>
+            <button class="button" onclick="showStep(3)">Confirmer la livraison</button>
+        </div>
+
+        <!-- Step 3: Order Tracking -->
+        <div id="step3" style="display: none;">
+            <h2>3. Suivi de votre commande</h2>
+            <p>Votre commande est en route !</p>
+            <p><strong>Temps estimé avant livraison :</strong> 45 minutes</p>
+            <div class="progress-bar-container">
+                <div class="progress-bar"></div>
+            </div>
+            <!-- Map Container -->
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        function showStep(stepNumber) {
+            if (stepNumber === 2) {
+                document.getElementById('step2').style.display = 'block';
+                document.getElementById('commanderButton').style.display = 'block';
+            } else if (stepNumber === 3) {
+                document.getElementById('step2').style.display = 'none';
+                document.getElementById('step3').style.display = 'block';
+                document.getElementById('commanderButton').style.display = 'none';
+                initializeMap();
+            }
+        }
+
+        function initializeMap() {
+            var map = L.map('map').setView([48.8566, 2.3522], 13); // Centered on Paris, France for demonstration
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            L.marker([48.8566, 2.3522]).addTo(map)
+                .bindPopup('Votre commande est ici !')
+                .openPopup();
+        }
+    </script>
+</body>
+</html>
